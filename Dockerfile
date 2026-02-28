@@ -1,5 +1,5 @@
 FROM python:3.9
-# Cache-Buster: Triggering fresh build after LFS binary push at 20:35
+# Cache-Buster V2: FORCING REBUILD AT 20:50 - DO NOT USE CACHE
 
 # Create a non-root user but stay as root for installation
 RUN useradd -m -u 1000 user

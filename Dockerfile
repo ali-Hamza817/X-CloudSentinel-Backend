@@ -12,10 +12,18 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy the rest of the application
 COPY . .
 
-# Binary Verification: Fail build if models are just Git LFS pointers (< 1MB)
-RUN ls -lh models/x-cloudsentinel-distilbert/model.safetensors && \
-    [ $(stat -c%s "models/x-cloudsentinel-distilbert/model.safetensors") -gt 1048576 ] || \
-    (echo "CRITICAL: model.safetensors is too small. Git LFS binaries were not pulled!" && exit 1)
+# Binary Verification & Auto-Recovery (Fixes Railway LFS Sync Issues)
+RUN python3 -c ' \
+import os, urllib.request; \
+def verify_and_download(path, url): \
+    if not os.path.exists(path) or os.path.getsize(path) < 1000000: \
+        print(f"Recovery: Downloading binary for {path}..."); \
+        os.makedirs(os.path.dirname(path), exist_ok=True); \
+        urllib.request.urlretrieve(url, path); \
+        print(f"Success: {path} restored (" + str(os.path.getsize(path)) + " bytes)"); \
+verify_and_download("models/x-cloudsentinel-distilbert/model.safetensors", "https://huggingface.co/qwlkjh/ExplainableCloudSentinel/resolve/main/models/x-cloudsentinel-distilbert/model.safetensors"); \
+verify_and_download("models/x-cloudsentinel-ner/model.safetensors", "https://huggingface.co/qwlkjh/ExplainableCloudSentinel/resolve/main/models/x-cloudsentinel-ner/model.safetensors"); \
+'
 
 # Ensure the data directory and the whole app is owned by the user
 # Hugging Face needs specific permissions for the persistent data

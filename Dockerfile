@@ -11,6 +11,11 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy the rest of the application
 COPY . .
 
+# Binary Verification: Fail build if models are just Git LFS pointers (< 1MB)
+RUN ls -lh models/x-cloudsentinel-distilbert/model.safetensors && \
+    [ $(stat -c%s "models/x-cloudsentinel-distilbert/model.safetensors") -gt 1048576 ] || \
+    (echo "CRITICAL: model.safetensors is too small. Git LFS binaries were not pulled!" && exit 1)
+
 # Ensure the data directory and the whole app is owned by the user
 # Hugging Face needs specific permissions for the persistent data
 RUN mkdir -p /app/data && chown -R user:user /app && chmod -R 777 /app/data

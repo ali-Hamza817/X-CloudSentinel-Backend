@@ -17,6 +17,16 @@ class SentinelNERClassifier:
     """Wrapper for the BERT-NER secret detection model."""
     def __init__(self, model_path):
         self.tokenizer = AutoTokenizer.from_pretrained(model_path)
+        
+        # Diagnostic: Verify if model.safetensors is binary or LFS pointer
+        safetensors_file = os.path.join(model_path, "model.safetensors")
+        if os.path.exists(safetensors_file):
+            size = os.path.getsize(safetensors_file)
+            print(f"DEBUG: NER model.safetensors size: {size} bytes")
+            if size < 500:
+                with open(safetensors_file, 'r') as f:
+                    print(f"DEBUG: NER model.safetensors content: {f.read(100)}")
+
         self.model = AutoModelForTokenClassification.from_pretrained(model_path)
         
         # CPU Optimization: 8-bit Quantization
